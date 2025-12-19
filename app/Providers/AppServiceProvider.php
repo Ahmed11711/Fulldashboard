@@ -2,6 +2,21 @@
 
 namespace App\Providers;
 
+use App\Repositories\Notification\NotificationRepositoryInterface;
+use App\Repositories\Notification\NotificationRepository;
+
+use App\Repositories\Favorite\FavoriteRepositoryInterface;
+use App\Repositories\Favorite\FavoriteRepository;
+
+use App\Repositories\Order\OrderRepositoryInterface;
+use App\Repositories\Order\OrderRepository;
+
+use App\Repositories\subCategory\subCategoryRepositoryInterface;
+use App\Repositories\subCategory\subCategoryRepository;
+
+use App\Repositories\Category\CategoryRepositoryInterface;
+use App\Repositories\Category\CategoryRepository;
+
 use App\Repositories\UserTransaction\UserTransactionRepositoryInterface;
 use App\Repositories\UserTransaction\UserTransactionRepository;
 
@@ -65,6 +80,11 @@ $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
         $this->app->bind(UserRankRepositoryInterface::class, UserRankRepository::class);
         $this->app->bind(UserPlanRepositoryInterface::class, UserPlanRepository::class);
         $this->app->bind(UserTransactionRepositoryInterface::class, UserTransactionRepository::class);
+        $this->app->bind(CategoryRepositoryInterface::class, CategoryRepository::class);
+        $this->app->bind(subCategoryRepositoryInterface::class, subCategoryRepository::class);
+        $this->app->bind(OrderRepositoryInterface::class, OrderRepository::class);
+        $this->app->bind(FavoriteRepositoryInterface::class, FavoriteRepository::class);
+        $this->app->bind(NotificationRepositoryInterface::class, NotificationRepository::class);
 }
 
     /**

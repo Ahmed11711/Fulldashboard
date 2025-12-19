@@ -19,7 +19,7 @@ use App\Services\Command\ControllerGeneratorDRY;
 
 class CrudGeneratorCommand extends Command
 {
-protected $signature = 'crud:generate {model} ';
+        protected $signature = 'ahmed {model} ';
 
         protected $description = 'Generate CRUD (Controller, Requests, Resource, Repository) inside an HMVC Module';
 
@@ -31,14 +31,14 @@ protected $signature = 'crud:generate {model} ';
 
 
 
-                 RepositoryGenerator::generate($model);
+                RepositoryGenerator::generate($model);
                 // Generate Request Validation
-                RequestGenerator::make( $model);
-                  ResourceGenerator::make($model);
+                RequestGenerator::make($model);
+                ResourceGenerator::make($model);
                 // Generate Api Resource
-                ApiRouteService::make( $model);
+                ApiRouteService::make($model);
                 // Generate Bind Repository
-                ProviderBindService::make( $model);
+                ProviderBindService::make($model);
 
 
                 ControllerGeneratorDRY::make($model);

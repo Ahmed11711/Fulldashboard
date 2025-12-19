@@ -12,14 +12,14 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 class User extends Authenticatable implements JWTSubject
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable,GenerateAffiliate;
+    use HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
      */
-    protected $guarded=[];
+    protected $guarded = [];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -45,19 +45,6 @@ class User extends Authenticatable implements JWTSubject
         ];
     }
 
-
-public function balance()
-{
-    return $this->hasOne(UserBalance::class);
-}
-
-
-    public function tron()
-    {
-        return $this->hasOne(userTron::class);
-
-    }
-
     public function getJWTIdentifier()
     {
         return $this->getKey();
@@ -66,12 +53,9 @@ public function balance()
     public function getJWTCustomClaims()
     {
         return [
-            'id'=>$this->id,
+            'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
-            'linkDeposit'=>$this->tron->address ??null,
         ];
     }
-
-    
 }

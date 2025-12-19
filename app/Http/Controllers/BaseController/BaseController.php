@@ -33,48 +33,48 @@ abstract class BaseController extends Controller
         $this->uploadDisk = $uploadDisk;
     }
 
-public function index(Request $request): JsonResponse
-{
-     try {
-        $query = $this->repository->query();
+    public function index(Request $request): JsonResponse
+    {
+        try {
+            $query = $this->repository->query();
 
-        // البحث
-        if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $table = $q->getModel()->getTable();
-                $stringColumns = Schema::getColumnListing($table);
-                $stringColumns = array_filter($stringColumns, function ($col) {
-                    return !in_array($col, ['id', 'created_at', 'updated_at', 'deleted_at']);
+            // البحث
+            if ($search = $request->input('search')) {
+                $query->where(function ($q) use ($search) {
+                    $table = $q->getModel()->getTable();
+                    $stringColumns = Schema::getColumnListing($table);
+                    $stringColumns = array_filter($stringColumns, function ($col) {
+                        return !in_array($col, ['id', 'created_at', 'updated_at', 'deleted_at']);
+                    });
+                    foreach ($stringColumns as $column) {
+                        $q->orWhere($column, 'like', "%{$search}%");
+                    }
                 });
-                foreach ($stringColumns as $column) {
-                    $q->orWhere($column, 'like', "%{$search}%");
-                }
-            });
-        }
-
-        // الفلاتر
-        $excluded = ['search', 'page', 'per_page'];
-        foreach ($request->except($excluded) as $key => $value) {
-            if ($value === null || $value === '') continue;
-            if (Schema::hasColumn($query->getModel()->getTable(), $key)) {
-                $query->where($key, $value);
             }
+
+            // الفلاتر
+            $excluded = ['search', 'page', 'per_page'];
+            foreach ($request->except($excluded) as $key => $value) {
+                if ($value === null || $value === '') continue;
+                if (Schema::hasColumn($query->getModel()->getTable(), $key)) {
+                    $query->where($key, $value);
+                }
+            }
+
+            // ✅ Pagination
+            $perPage = $request->input('per_page', 10);
+            $data = $query->latest()->paginate($perPage);
+
+            if (class_exists($this->resourceClass)) {
+                $data = $this->resourceClass::collection($data);
+            }
+
+            return $this->successResponsePaginate($data, "{$this->collectionName} list retrieved successfully");
+        } catch (\Throwable $e) {
+            Log::error("Error in {$this->collectionName} index: " . $e->getMessage());
+            return $this->errorResponse("Failed to fetch data", 500);
         }
-
-        // ✅ Pagination
-        $perPage = $request->input('per_page', 10);
-        $data = $query->latest()->paginate($perPage);
-
-        if (class_exists($this->resourceClass)) {
-            $data = $this->resourceClass::collection($data);
-        }
-
-        return $this->successResponsePaginate($data, "{$this->collectionName} list retrieved successfully");
-    } catch (\Throwable $e) {
-        Log::error("Error in {$this->collectionName} index: " . $e->getMessage());
-        return $this->errorResponse("Failed to fetch data", 500);
     }
-}
 
 
     public function show(int $id): JsonResponse
@@ -92,22 +92,22 @@ public function index(Request $request): JsonResponse
     {
         $validated = app($this->storeRequestClass)->validated();
 
-     try {
-    DB::beginTransaction();
+        try {
+            DB::beginTransaction();
 
-    $validated = $this->handleFileUploads($request, $validated);
-    $record = $this->repository->create($validated);
+            $validated = $this->handleFileUploads($request, $validated);
+            $record = $this->repository->create($validated);
 
-    DB::commit();
-} catch (\Throwable $e) {
-    DB::rollBack();
-    Log::error("Error creating {$this->collectionName}: " . $e->getMessage());
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error("Error creating {$this->collectionName}: " . $e->getMessage());
 
-     return $this->errorResponse(
-        "Failed to create {$this->collectionName}: " . $e->getMessage(),
-        500
-    );
-}
+            return $this->errorResponse(
+                "Failed to create {$this->collectionName}: " . $e->getMessage(),
+                500
+            );
+        }
 
         return $this->successResponse(new $this->resourceClass($record), 'Record created successfully', 201);
     }
@@ -154,34 +154,33 @@ public function index(Request $request): JsonResponse
         return $this->successResponse(null, "$deletedCount record(s) deleted successfully");
     }
 
-   protected function handleFileUploads(Request $request, array $validated, $existingRecord = null): array
-{
-    if (empty($this->fileFields)) return $validated;
+    protected function handleFileUploads(Request $request, array $validated, $existingRecord = null): array
+    {
+        if (empty($this->fileFields)) return $validated;
 
-    foreach ($this->fileFields as $field) {
-        if ($request->hasFile($field)) {
-            try {
-                $file = $request->file($field);
-                $filename = time() . '_' . $file->getClientOriginalName();
-                $path = $file->storeAs("uploads/{$this->collectionName}", $filename, $this->uploadDisk);
+        foreach ($this->fileFields as $field) {
+            if ($request->hasFile($field)) {
+                try {
+                    $file = $request->file($field);
+                    $filename = time() . '_' . $file->getClientOriginalName();
+                    $path = $file->storeAs("uploads/{$this->collectionName}", $filename, $this->uploadDisk);
 
-                 if ($existingRecord && !empty($existingRecord->$field)) {
-                    Storage::disk($this->uploadDisk)
-                        ->delete('uploads/'.$this->collectionName.'/'.basename($existingRecord->$field));
+                    if ($existingRecord && !empty($existingRecord->$field)) {
+                        Storage::disk($this->uploadDisk)
+                            ->delete('uploads/' . $this->collectionName . '/' . basename($existingRecord->$field));
+                    }
+
+                    /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+                    // $disk = Storage::disk($this->uploadDisk);
+                    $validated[$field] = "https://back.zayamrock.com/storage/app/public/" . $path;
+
+                    $validated[$field] = config('app.url') . '/storage/app/public/' . $path;
+                } catch (\Throwable $e) {
+                    Log::error("File upload failed for field [{$field}] in {$this->collectionName}: " . $e->getMessage());
                 }
-
-                /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
-                // $disk = Storage::disk($this->uploadDisk);
-                $validated[$field] = "https://back.zayamrock.com/storage/app/public/" . $path;
-
-
-            } catch (\Throwable $e) {
-                Log::error("File upload failed for field [{$field}] in {$this->collectionName}: " . $e->getMessage());
             }
         }
+
+        return $validated;
     }
-
-    return $validated;
-}
-
 }

@@ -13,21 +13,33 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
+
             $table->string('password');
             $table->string('phone')->nullable();
-            $table->string('affiliate_code')->unique();
-            $table->boolean('affiliate_code_active')->default(false);
-            $table->string('coming_affiliate')->nullable();
+
             $table->boolean('active')->default(true);
-            $table->boolean('verified_kyc')->default(false);
-            $table->enum('type',['user','guest','admin'])->default('user');
+
+            // gender enum
+            $table->enum('gender', ['male', 'female'])->nullable();
+
+            // date of birth
+            $table->date('date_of_birth')->nullable();
+
+            // store info
+            $table->string('store_name')->nullable();
+            $table->decimal('percentage', 5, 2)->default(0);
+            // مثال: 10.50 %
+
+            $table->enum('type', ['user', 'admin'])->default('user');
+
             $table->rememberToken();
-            $table->string('google_id')->nullable();
             $table->timestamps();
         });
+
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();

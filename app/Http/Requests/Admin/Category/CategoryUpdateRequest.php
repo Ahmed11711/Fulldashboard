@@ -14,10 +14,9 @@ class CategoryUpdateRequest extends BaseRequest
     public function rules(): array
     {
         return [
-            'name' => 'sometimes|required|string|max:255',
-            'image' => 'nullable|sometimes|file|max:2048',
-            'active' => 'sometimes|required|integer',
-            'description' => 'nullable|sometimes|string',
+            'name_en' => 'sometimes|required|string|max:255',
+            'name_ar' => 'sometimes|required|string|max:255',
+            'image' => 'sometimes|required|string|max:255|file|max:2048',
         ];
     }
 }

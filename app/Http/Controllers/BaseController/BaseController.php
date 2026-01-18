@@ -172,9 +172,9 @@ abstract class BaseController extends Controller
 
                     /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
                     // $disk = Storage::disk($this->uploadDisk);
-                    $validated[$field] = "https://back.zayamrock.com/storage/app/public/" . $path;
+                    // $validated[$field] = "https://back.zayamrock.com/storage/app/public/" . $path;
 
-                    $validated[$field] = config('app.url') . '/storage/app/public/' . $path;
+                    $validated[$field] = config('app.url') . '/storage/' . $path;
                 } catch (\Throwable $e) {
                     Log::error("File upload failed for field [{$field}] in {$this->collectionName}: " . $e->getMessage());
                 }
